@@ -23,6 +23,19 @@ exports.getTransaksiById = async (req, res) => {
   }
 };
 
+exports.getTransaksiByName = async (req, res) => {
+  try {
+    const [transaksi] = await db.query("SELECT * FROM transaksi WHERE name = ?", [
+      req.params.name,
+    ]);
+    if (transaksi.length === 0)
+      return response.error(res, "Transaksi tidak ditemukan", 404);
+    response.success(res, transaksi[0], "Berhasil mengambil data transaksi");
+  } catch (err) {
+    response.error(res, "Gagal mengambil data transaksi", 500, err.message);
+  }
+};
+
 exports.createTransaksi = async (req, res) => {
   try {
     const { nama_pembeli, id_user, total_harga, tanggal, status } = req.body;

@@ -4,6 +4,7 @@ const transaksiController = require("../controllers/transaksiController");
 
 router.get("/", transaksiController.getAllTransaksi);
 router.get("/:id", transaksiController.getTransaksiById);
+router.get("/:name", transaksiController.getTransaksiByName);
 router.post("/add-transaksi", transaksiController.createTransaksi);
 router.put("/update-transaksi/:id", transaksiController.updateTransaksi);
 router.delete("/delete-transaksi/:id", transaksiController.deleteTransaksi);
