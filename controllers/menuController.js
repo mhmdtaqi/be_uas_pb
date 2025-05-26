@@ -23,6 +23,19 @@ exports.getMenuById = async (req, res) => {
   }
 };
 
+exports.getMenuByName = async (req, res) => {
+  try {
+    const [menu] = await db.query("SELECT * FROM menu WHERE name = ?", [
+      req.params.name,
+    ]);
+    if (menu.length === 0)
+      return response.error(res, "Menu tidak ditemukan", 404);
+    response.success(res, menu[0], "Berhasil mengambil data menu");
+  } catch (err) {
+    response.error(res, "Gagal mengambil data menu", 500, err.message);
+  }
+};
+
 exports.createMenu = async (req, res) => {
   try {
     const { nama, jenis, harga } = req.body;
