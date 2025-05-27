@@ -1,6 +1,7 @@
 const db = require("../db/db");
 const bcrypt = require("bcrypt");
 const response = require("../utils/response");
+const jwt = require("jsonwebtoken");
 
 exports.getAllUsers = async (req, res) => {
   try {
@@ -24,21 +25,41 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-exports.createUser = async (req, res) => {
+exports.Register = async (req, res) => {
   try {
     const { nama, password } = req.body;
+
+    // Validasi input
     if (!nama || !password) {
       return response.error(res, "Nama dan password wajib diisi", 400);
     }
+
+    if (password.length < 6) {
+      return response.error(res, "Password minimal 6 karakter", 400);
+    }
+
+    // Cek apakah username sudah ada
+    const [existingUsers] = await db.query(
+      "SELECT * FROM user WHERE nama = ?",
+      [nama]
+    );
+    if (existingUsers.length > 0) {
+      return response.error(res, "Username sudah digunakan", 400);
+    }
+
+    // Hash password
     const saltRounds = 10;
     const password_hash = await bcrypt.hash(password, saltRounds);
+
+    // Simpan user baru
     await db.query("INSERT INTO user (nama, password_hash) VALUES (?, ?)", [
       nama,
       password_hash,
     ]);
-    response.success(res, null, "User berhasil dibuat", 201);
+
+    response.success(res, null, "Registrasi berhasil", 201);
   } catch (err) {
-    response.error(res, "Gagal membuat user", 500, err.message);
+    response.error(res, "Gagal melakukan registrasi", 500, err.message);
   }
 };
 
@@ -73,5 +94,44 @@ exports.deleteUser = async (req, res) => {
     response.success(res, null, "User berhasil dihapus");
   } catch (err) {
     response.error(res, "Gagal menghapus user", 500, err.message);
+  }
+};
+
+exports.login = async (req, res) => {
+  try {
+    const { nama, password } = req.body;
+
+    if (!nama || !password) {
+      return response.error(res, "Nama dan password wajib diisi", 400);
+    }
+
+    // Cari user berdasarkan nama
+    const [users] = await db.query("SELECT * FROM user WHERE nama = ?", [nama]);
+
+    if (users.length === 0) {
+      return response.error(res, "User tidak ditemukan", 401);
+    }
+
+    const user = users[0];
+
+    // Verifikasi password
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    if (!isValidPassword) {
+      return response.error(res, "Password salah", 401);
+    }
+
+    // Buat token JWT
+    const token = jwt.sign(
+      {
+        id_user: user.id_user,
+        nama: user.nama,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "24h" }
+    );
+
+    response.success(res, { token }, "Login berhasil");
+  } catch (err) {
+    response.error(res, "Gagal login", 500, err.message);
   }
 };

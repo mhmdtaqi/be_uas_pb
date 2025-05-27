@@ -1,5 +1,6 @@
 const express = require("express");
 require("dotenv").config();
+const authMiddleware = require("./utils/authMiddleware");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,12 +16,15 @@ const transaksiDetailRoutes = require("./routes/transaksiDetailRoutes");
 const laporanHarianRoutes = require("./routes/laporanHarianRoutes");
 const laporanBulananRoutes = require("./routes/laporanBulananRoutes");
 
+// Public routes (tidak memerlukan autentikasi)
 app.use("/user", userRoutes);
-app.use("/menu", menuRoutes);
-app.use("/transaksi", transaksiRoutes);
-app.use("/transaksi-detail", transaksiDetailRoutes);
-app.use("/laporan-harian", laporanHarianRoutes);
-app.use("/laporan-bulanan", laporanBulananRoutes);
+
+// Protected routes (memerlukan autentikasi)
+app.use("/menu", authMiddleware, menuRoutes);
+app.use("/transaksi", authMiddleware, transaksiRoutes);
+app.use("/transaksi-detail", authMiddleware, transaksiDetailRoutes);
+app.use("/laporan-harian", authMiddleware, laporanHarianRoutes);
+app.use("/laporan-bulanan", authMiddleware, laporanBulananRoutes);
 
 // Root
 app.get("/", (req, res) => {
@@ -28,5 +32,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server berjalan di http://localhost:${PORT}`);
+  console. log(`Server berjalan di http://localhost:${PORT}`);
 });
