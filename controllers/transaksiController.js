@@ -42,15 +42,35 @@ exports.getTransaksiById = async (req, res) => {
   }
 };
 
-exports.getTransaksiByName = async (req, res) => {
+exports.getTransaksiByNamaPembeli = async (req, res) => {
   try {
+    // Konversi nama pembeli ke string dan bersihkan dari whitespace
+    const nama_pembeli = String(req.params.nama_pembeli).trim();
+
+    if (!nama_pembeli) {
+      return response.error(res, "Nama pembeli tidak boleh kosong", 400);
+    }
+
+    // Gunakan LIKE untuk pencarian yang lebih fleksibel
     const [transaksi] = await db.query(
-      "SELECT * FROM transaksi WHERE name = ?",
-      [req.params.name]
+      "SELECT * FROM transaksi WHERE nama_pembeli LIKE ?",
+      [`%${nama_pembeli}%`]
     );
-    if (transaksi.length === 0)
+
+    if (transaksi.length === 0) {
       return response.error(res, "Transaksi tidak ditemukan", 404);
-    response.success(res, transaksi[0], "Berhasil mengambil data transaksi");
+    }
+
+    // Untuk setiap transaksi, ambil total dari detail
+    for (let t of transaksi) {
+      const [details] = await db.query(
+        "SELECT SUM(harga_menu * jumlah_menu) as total FROM transaksi_detail WHERE id_transaksi = ?",
+        [t.id]
+      );
+      t.total_harga = details[0].total || 0;
+    }
+
+    response.success(res, transaksi, "Berhasil mengambil data transaksi");
   } catch (err) {
     response.error(res, "Gagal mengambil data transaksi", 500, err.message);
   }

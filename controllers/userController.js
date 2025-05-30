@@ -27,7 +27,7 @@ exports.getUserById = async (req, res) => {
 
 exports.Register = async (req, res) => {
   try {
-    const { nama, password } = req.body;
+    const { nama, password, role } = req.body;
 
     // Validasi input
     if (!nama || !password) {
@@ -36,6 +36,11 @@ exports.Register = async (req, res) => {
 
     if (password.length < 6) {
       return response.error(res, "Password minimal 6 karakter", 400);
+    }
+
+    // Validasi role
+    if (role && !["owner", "kasir"].includes(role)) {
+      return response.error(res, "Role harus berupa 'owner' atau 'kasir'", 400);
     }
 
     // Cek apakah username sudah ada
@@ -52,10 +57,10 @@ exports.Register = async (req, res) => {
     const password_hash = await bcrypt.hash(password, saltRounds);
 
     // Simpan user baru
-    await db.query("INSERT INTO user (nama, password_hash) VALUES (?, ?)", [
-      nama,
-      password_hash,
-    ]);
+    await db.query(
+      "INSERT INTO user (nama, password_hash, role) VALUES (?, ?, ?)",
+      [nama, password_hash, role || "kasir"]
+    );
 
     response.success(res, null, "Registrasi berhasil", 201);
   } catch (err) {
@@ -65,20 +70,27 @@ exports.Register = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const { nama, password } = req.body;
+    const { nama, password, role } = req.body;
     let password_hash;
     if (password) {
       const saltRounds = 10;
       password_hash = await bcrypt.hash(password, saltRounds);
     }
+
+    // Validasi role jika diupdate
+    if (role && !["owner", "kasir"].includes(role)) {
+      return response.error(res, "Role harus berupa 'owner' atau 'kasir'", 400);
+    }
+
     if (password_hash) {
       await db.query(
-        "UPDATE user SET nama = ?, password_hash = ? WHERE id_user = ?",
-        [nama, password_hash, req.params.id]
+        "UPDATE user SET nama = ?, password_hash = ?, role = ? WHERE id_user = ?",
+        [nama, password_hash, role, req.params.id]
       );
     } else {
-      await db.query("UPDATE user SET nama = ? WHERE id_user = ?", [
+      await db.query("UPDATE user SET nama = ?, role = ? WHERE id_user = ?", [
         nama,
+        role,
         req.params.id,
       ]);
     }
@@ -125,6 +137,7 @@ exports.login = async (req, res) => {
       {
         id_user: user.id_user,
         nama: user.nama,
+        role: user.role,
       },
       process.env.JWT_SECRET,
       { expiresIn: "24h" }

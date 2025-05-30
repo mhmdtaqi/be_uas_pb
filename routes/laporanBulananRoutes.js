@@ -1,19 +1,38 @@
 const express = require("express");
 const router = express.Router();
 const laporanBulananController = require("../controllers/laporanBulananController");
+const authMiddleware = require("../utils/authMiddleware");
+const { ownerOnly } = require("../utils/roleMiddleware");
 
-router.get("/", laporanBulananController.getAllLaporanBulanan);
-router.get("/:bulan", laporanBulananController.getLaporanBulananByBulan);
+// Protected routes - hanya owner yang bisa akses
+router.get(
+  "/",
+  authMiddleware,
+  ownerOnly,
+  laporanBulananController.getAllLaporanBulanan
+);
+router.get(
+  "/:bulan",
+  authMiddleware,
+  ownerOnly,
+  laporanBulananController.getLaporanBulananByBulan
+);
 router.post(
-  "/add-laporan-bulanan",
+  "/",
+  authMiddleware,
+  ownerOnly,
   laporanBulananController.createLaporanBulanan
 );
 router.put(
-  "/update-laporan-bulanan/:bulan",
+  "/:bulan",
+  authMiddleware,
+  ownerOnly,
   laporanBulananController.updateLaporanBulanan
 );
 router.delete(
-  "/delete-laporan-bulanan/:bulan",
+  "/:bulan",
+  authMiddleware,
+  ownerOnly,
   laporanBulananController.deleteLaporanBulanan
 );
 

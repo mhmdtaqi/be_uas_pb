@@ -1,10 +1,34 @@
 const db = require("../db/db");
 const response = require("../utils/response");
 
+// Fungsi untuk mengubah format tanggal
+const formatTanggal = (tanggal) => {
+  const hari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+  const date = new Date(tanggal);
+  const namaHari = hari[date.getDay()];
+  const tanggalFormatted = date.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  return `${namaHari}, ${tanggalFormatted}`;
+};
+
 exports.getAllLaporanHarian = async (req, res) => {
   try {
     const [laporan] = await db.query("SELECT * FROM laporan_harian");
-    response.success(res, laporan, "Berhasil mengambil data laporan harian");
+
+    // Format tanggal untuk setiap laporan
+    const laporanFormatted = laporan.map((item) => ({
+      ...item,
+      tanggal: formatTanggal(item.tanggal),
+    }));
+
+    response.success(
+      res,
+      laporanFormatted,
+      "Berhasil mengambil data laporan harian"
+    );
   } catch (err) {
     response.error(
       res,
@@ -17,14 +41,32 @@ exports.getAllLaporanHarian = async (req, res) => {
 
 exports.getLaporanHarianByTanggal = async (req, res) => {
   try {
+    // Log untuk debugging
+    console.log("Tanggal yang dicari:", req.params.tanggal);
+
     const [laporan] = await db.query(
-      "SELECT * FROM laporan_harian WHERE tanggal = ?",
+      "SELECT * FROM laporan_harian WHERE DATE_FORMAT(tanggal, '%Y-%m-%d') = ?",
       [req.params.tanggal]
     );
+
+    console.log("Hasil query:", laporan);
+
     if (laporan.length === 0)
       return response.error(res, "Laporan harian tidak ditemukan", 404);
-    response.success(res, laporan[0], "Berhasil mengambil data laporan harian");
+
+    // Format tanggal untuk laporan yang ditemukan
+    const laporanFormatted = {
+      ...laporan[0],
+      tanggal: formatTanggal(laporan[0].tanggal),
+    };
+
+    response.success(
+      res,
+      laporanFormatted,
+      "Berhasil mengambil data laporan harian"
+    );
   } catch (err) {
+    console.error("Error:", err);
     response.error(
       res,
       "Gagal mengambil data laporan harian",

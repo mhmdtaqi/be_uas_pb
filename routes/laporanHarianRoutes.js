@@ -1,13 +1,38 @@
 const express = require("express");
 const router = express.Router();
 const laporanHarianController = require("../controllers/laporanHarianController");
+const authMiddleware = require("../utils/authMiddleware");
+const { ownerOnly } = require("../utils/roleMiddleware");
 
-router.get("/", laporanHarianController.getAllLaporanHarian);
-router.get("/:tanggal", laporanHarianController.getLaporanHarianByTanggal);
-router.post("/add-laporan-harian", laporanHarianController.createLaporanHarian);
-router.put( "/update-laporan-harian/:tanggal",laporanHarianController.updateLaporanHarian);
+// Protected routes - hanya owner yang bisa akses
+router.get(
+  "/",
+  authMiddleware,
+  ownerOnly,
+  laporanHarianController.getAllLaporanHarian
+);
+router.get(
+  "/:tanggal",
+  authMiddleware,
+  ownerOnly,
+  laporanHarianController.getLaporanHarianByTanggal
+);
+router.post(
+  "/",
+  authMiddleware,
+  ownerOnly,
+  laporanHarianController.createLaporanHarian
+);
+router.put(
+  "/:tanggal",
+  authMiddleware,
+  ownerOnly,
+  laporanHarianController.updateLaporanHarian
+);
 router.delete(
-  "/delete-laporan-harian/:tanggal",
+  "/:tanggal",
+  authMiddleware,
+  ownerOnly,
   laporanHarianController.deleteLaporanHarian
 );
 

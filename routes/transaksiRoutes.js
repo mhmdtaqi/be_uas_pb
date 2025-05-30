@@ -1,12 +1,45 @@
 const express = require("express");
 const router = express.Router();
 const transaksiController = require("../controllers/transaksiController");
+const authMiddleware = require("../utils/authMiddleware");
+const { ownerAndKasir } = require("../utils/roleMiddleware");
 
-router.get("/", transaksiController.getAllTransaksi);
-router.get("/:id", transaksiController.getTransaksiById);
-router.get("/:name", transaksiController.getTransaksiByName);
-router.post("/add-transaksi", transaksiController.createTransaksi);
-router.put("/update-transaksi/:id", transaksiController.updateTransaksi);
-router.delete("/delete-transaksi/:id", transaksiController.deleteTransaksi);
+// Protected routes - owner dan kasir bisa akses
+router.get(
+  "/",
+  authMiddleware,
+  ownerAndKasir,
+  transaksiController.getAllTransaksi
+);
+router.get(
+  "/:id",
+  authMiddleware,
+  ownerAndKasir,
+  transaksiController.getTransaksiById
+);
+router.get(
+  "/n/:nama_pembeli",
+  authMiddleware,
+  ownerAndKasir,
+  transaksiController.getTransaksiByNamaPembeli
+);
+router.post(
+  "/",
+  authMiddleware,
+  ownerAndKasir,
+  transaksiController.createTransaksi
+);
+router.put(
+  "/:id",
+  authMiddleware,
+  ownerAndKasir,
+  transaksiController.updateTransaksi
+);
+router.delete(
+  "/:id",
+  authMiddleware,
+  ownerAndKasir,
+  transaksiController.deleteTransaksi
+);
 
 module.exports = router;
