@@ -16,10 +16,8 @@ const transaksiDetailRoutes = require("./routes/transaksiDetailRoutes");
 const laporanHarianRoutes = require("./routes/laporanHarianRoutes");
 const laporanBulananRoutes = require("./routes/laporanBulananRoutes");
 
-// Public routes (tidak memerlukan autentikasi)
-app.use("/user", userRoutes);
 
-// Protected routes (memerlukan autentikasi)
+app.use("/user", userRoutes);
 app.use("/menu", authMiddleware, menuRoutes);
 app.use("/transaksi", authMiddleware, transaksiRoutes);
 app.use("/transaksi-detail", authMiddleware, transaksiDetailRoutes);

@@ -105,13 +105,19 @@ exports.createTransaksi = async (req, res) => {
     }
     const id_user = users[0].id_user;
 
-    // Insert transaksi dengan status default pending
+    // Cek ID transaksi terakhir
+    const [lastTransaksi] = await connection.query(
+      "SELECT MAX(id) as last_id FROM transaksi"
+    );
+    const nextId = (lastTransaksi[0].last_id || 0) + 1;
+
+    // Insert transaksi dengan status default pending dan ID yang sudah ditentukan
     const [result] = await connection.query(
-      "INSERT INTO transaksi (nama_pembeli, id_user, total_harga, tanggal, status) VALUES (?, ?, 0, ?, 'pending')",
-      [nama_pembeli, id_user, tanggal]
+      "INSERT INTO transaksi (id, nama_pembeli, id_user, total_harga, tanggal, status) VALUES (?, ?, ?, 0, ?, 'pending')",
+      [nextId, nama_pembeli, id_user, tanggal]
     );
 
-    const id_transaksi = result.insertId;
+    const id_transaksi = nextId;
 
     // Insert detail transaksi dan ambil harga dari menu
     for (const item of items) {
