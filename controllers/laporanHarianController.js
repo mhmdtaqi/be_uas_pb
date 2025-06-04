@@ -4,14 +4,25 @@ const response = require("../utils/response");
 // Fungsi untuk mengubah format tanggal
 const formatTanggal = (tanggal) => {
   const hari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+  const bulan = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
   const date = new Date(tanggal);
   const namaHari = hari[date.getDay()];
-  const tanggalFormatted = date.toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-  return `${namaHari}, ${tanggalFormatted}`;
+  const namaBulan = bulan[date.getMonth()];
+  const tahun = date.getFullYear();
+  return `${namaHari}, ${date.getDate()} ${namaBulan} ${tahun}`;
 };
 
 exports.getAllLaporanHarian = async (req, res) => {
