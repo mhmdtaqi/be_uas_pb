@@ -169,79 +169,30 @@ exports.updateTransaksi = async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    const { nama_pembeli, nama_user, tanggal, status, items } = req.body;
+    const { status } = req.body;
     const id_transaksi = req.params.id;
 
     // Validasi input
-    if (
-      !nama_pembeli ||
-      !nama_user ||
-      !tanggal ||
-      !status ||
-      !items ||
-      !Array.isArray(items) ||
-      items.length === 0
-    ) {
-      return response.error(res, "Data transaksi tidak lengkap", 400);
-    }
-
-    // Cari id_user berdasarkan nama
-    const [users] = await connection.query(
-      "SELECT id_user FROM user WHERE nama = ?",
-      [nama_user]
-    );
-    if (users.length === 0) {
-      throw new Error(`User dengan nama ${nama_user} tidak ditemukan`);
-    }
-    const id_user = users[0].id_user;
-
-    // Update data transaksi (kecuali total_harga)
-    await connection.query(
-      "UPDATE transaksi SET nama_pembeli = ?, id_user = ?, tanggal = ?, status = ? WHERE id = ?",
-      [nama_pembeli, id_user, tanggal, status, id_transaksi]
-    );
-
-    // Hapus detail transaksi lama
-    await connection.query(
-      "DELETE FROM transaksi_detail WHERE id_transaksi = ?",
-      [id_transaksi]
-    );
-
-    // Insert detail transaksi baru
-    for (const item of items) {
-      // Cari menu berdasarkan nama
-      const [menu] = await connection.query(
-        "SELECT id, harga FROM menu WHERE nama = ?",
-        [item.nama_menu]
-      );
-      if (menu.length === 0) {
-        throw new Error(`Menu dengan nama ${item.nama_menu} tidak ditemukan`);
-      }
-      await connection.query(
-        "INSERT INTO transaksi_detail (id_transaksi, id_menu, jumlah_menu, harga_menu) VALUES (?, ?, ?, ?)",
-        [id_transaksi, menu[0].id, item.jumlah_menu, menu[0].harga]
+    if (!status || !["selesai", "dibatalkan"].includes(status)) {
+      return response.error(
+        res,
+        "Status harus 'selesai' atau 'dibatalkan'",
+        400
       );
     }
 
-    // Hitung total dari detail transaksi
-    const [details] = await connection.query(
-      "SELECT SUM(harga_menu * jumlah_menu) as total FROM transaksi_detail WHERE id_transaksi = ?",
-      [id_transaksi]
-    );
-    const total_harga = details[0].total || 0;
-
-    // Update total_harga di transaksi
-    await connection.query(
-      "UPDATE transaksi SET total_harga = ? WHERE id = ?",
-      [total_harga, id_transaksi]
-    );
+    // Update status transaksi
+    await connection.query("UPDATE transaksi SET status = ? WHERE id = ?", [
+      status,
+      id_transaksi,
+    ]);
 
     await connection.commit();
 
-    response.success(res, { total_harga }, "Transaksi berhasil diupdate");
+    response.success(res, { status }, "Status transaksi berhasil diupdate");
   } catch (err) {
     await connection.rollback();
-    response.error(res, "Gagal mengupdate transaksi", 500, err.message);
+    response.error(res, "Gagal mengupdate status transaksi", 500, err.message);
   } finally {
     connection.release();
   }
