@@ -10,8 +10,19 @@ router.post("/register", userController.Register);
 
 // Protected routes - hanya owner yang bisa akses
 router.get("/", authMiddleware, ownerOnly, userController.getAllUsers);
+router.get("/current", authMiddleware, userController.getCurrentUser);
 router.get("/:id", authMiddleware, ownerOnly, userController.getUserById);
-router.put("/update-user/:id",authMiddleware,ownerOnly,userController.updateUser);
-router.delete("/delete-user/:id",authMiddleware,ownerOnly,userController.deleteUser);
+router.put(
+  "/update-user/:id",
+  authMiddleware,
+  ownerOnly,
+  userController.updateUser
+);
+router.delete(
+  "/delete-user/:id",
+  authMiddleware,
+  ownerOnly,
+  userController.deleteUser
+);
 
 module.exports = router;

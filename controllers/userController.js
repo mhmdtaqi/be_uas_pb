@@ -148,3 +148,17 @@ exports.login = async (req, res) => {
     response.error(res, "Gagal login", 500, err.message);
   }
 };
+
+exports.getCurrentUser = async (req, res) => {
+  try {
+    // Data user sudah ada di req.user dari middleware auth
+    const { nama, role } = req.user;
+    response.success(
+      res,
+      { nama, role },
+      "Berhasil mengambil data user yang sedang login"
+    );
+  } catch (err) {
+    response.error(res, "Gagal mengambil data user", 500, err.message);
+  }
+};
