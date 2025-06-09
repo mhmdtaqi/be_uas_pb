@@ -6,9 +6,9 @@ const { ownerOnly } = require("../utils/roleMiddleware");
 
 // Public routes
 router.post("/login", userController.login);
-router.post("/register", userController.Register);
 
 // Protected routes - hanya owner yang bisa akses
+router.post("/register", authMiddleware, ownerOnly, userController.Register);
 router.get("/", authMiddleware, ownerOnly, userController.getAllUsers);
 router.get("/current", authMiddleware, userController.getCurrentUser);
 router.get("/:id", authMiddleware, ownerOnly, userController.getUserById);
